@@ -1,1 +1,881 @@
 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FleetResolve</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+    margin: 0;
+    font-family: Inter, Arial, sans-serif;
+    background: #f5f7fa;
+    color: #172033;
+    height: 100vh;
+    overflow: hidden;
+    }
+
+    .header {
+        background: #172033;
+        color: white;
+        padding: 18px 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .brand {
+        font-size: 22px;
+        font-weight: 700;
+    }
+
+    .subtitle {
+        font-size: 13px;
+        opacity: 0.7;
+        margin-top: 3px;
+    }
+
+    .operator {
+        font-size: 14px;
+    }
+
+    .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px 28px;
+    height: calc(100vh - 70px);
+    display: flex;
+    flex-direction: column;
+    }
+
+
+    .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 16px;
+    flex-shrink: 0;
+    }
+
+    .metric {
+        background: white;
+        border: 1px solid #e2e6ec;
+        border-radius: 10px;
+        padding: 14px 18px;
+    }
+
+    .metric-label {
+        font-size: 13px;
+        color: #667085;
+    }
+
+    .metric-value {
+        font-size: 28px;
+        font-weight: 700;
+        margin-top: 8px;
+    }
+
+    .main {
+    display: grid;
+    grid-template-columns: 1.1fr 1.9fr;
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+    }
+
+    .panel {
+    background: white;
+    border: 1px solid #e2e6ec;
+    border-radius: 10px;
+    overflow: auto;
+    min-height: 0;
+    }
+
+    .panel-header {
+        padding: 18px 20px;
+        border-bottom: 1px solid #e2e6ec;
+        font-weight: 700;
+    }
+
+    .device {
+        padding: 18px 20px;
+        border-bottom: 1px solid #edf0f4;
+        cursor: pointer;
+    }
+
+    .device:hover {
+        background: #f8fafc;
+    }
+
+    .device.selected {
+        background: #eef4ff;
+        border-left: 4px solid #356ae6;
+    }
+
+    .device-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .device-id {
+        font-weight: 700;
+    }
+
+    .device-type {
+        color: #667085;
+        font-size: 13px;
+        margin-top: 5px;
+    }
+
+    .status {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 20px;
+    }
+
+    .offline {
+        background: #fff0f0;
+        color: #b42318;
+    }
+
+    .online {
+        background: #ecfdf3;
+        color: #027a48;
+    }
+
+    .details {
+        padding: 22px;
+    }
+
+    .detail-title {
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+    .detail-subtitle {
+        color: #667085;
+        margin-top: 4px;
+    }
+
+    .device-facts {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin: 20px 0;
+    }
+
+    .fact {
+        background: #f8fafc;
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    .fact-label {
+        font-size: 11px;
+        color: #667085;
+        text-transform: uppercase;
+    }
+
+    .fact-value {
+        margin-top: 5px;
+        font-weight: 600;
+    }
+
+    button {
+        border: 0;
+        border-radius: 7px;
+        padding: 10px 16px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .primary {
+        background: #172033;
+        color: white;
+    }
+
+    .secondary {
+        background: #eef2f6;
+        color: #344054;
+    }
+
+    button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+
+    .agent-panel {
+        margin-top: 20px;
+        border: 1px solid #e2e6ec;
+        border-radius: 9px;
+        overflow: hidden;
+    }
+
+    .agent-header {
+        background: #f8fafc;
+        padding: 14px 16px;
+        font-weight: 700;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .agent-body {
+    padding: 18px 20px;
+    font-size: 14px;
+    line-height: 1.55;
+    text-align: left;
+    }
+
+    .agent-section-title {
+        margin-top: 18px;
+        margin-bottom: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #667085;
+    }
+
+    .agent-section-title:first-child {
+        margin-top: 0;
+    }
+
+    .agent-line {
+        margin-bottom: 6px;
+    }
+
+
+
+    .valid {
+        background: #ecfdf3;
+        color: #027a48;
+    }
+
+    .review {
+        background: #fff7ed;
+        color: #b54708;
+    }
+
+    .trace {
+        margin-top: 14px;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 7px;
+        font-size: 12px;
+        color: #475467;
+    }
+
+    .human-state {
+        margin-top: 20px;
+        padding: 16px;
+        border: 1px solid #e2e6ec;
+        border-radius: 9px;
+    }
+
+    .human-state-title {
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .state-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .empty {
+        padding: 30px;
+        color: #667085;
+        text-align: center;
+    }
+
+    @media (max-width: 900px) {
+        .metrics {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .main {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .decision-note {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #98a2b3;
+    }
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <div>
+        <div class="brand">FleetResolve</div>
+        <div class="subtitle">Agentic fleet operations</div>
+    </div>
+
+    <div class="operator">
+        Maya . Fleet Operations
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="metrics">
+        <div class="metric">
+            <div class="metric-label">Fleet Devices</div>
+            <div class="metric-value">5</div>
+        </div>
+
+        <div class="metric">
+            <div class="metric-label">Online</div>
+            <div class="metric-value">3</div>
+        </div>
+
+        <div class="metric">
+            <div class="metric-label">Needs Investigation</div>
+            <div class="metric-value">2</div>
+        </div>
+
+        <div class="metric">
+            <div class="metric-label">Agent Investigations</div>
+            <div class="metric-value" id="investigationCount">0</div>
+        </div>
+    </div>
+
+    <div class="main">
+
+        <div class="panel">
+            <div class="panel-header">
+                Connected Devices
+            </div>
+
+            <div id="deviceList"></div>
+        </div>
+
+        <div class="panel">
+
+            <div id="details" class="empty">
+                Select a device to investigate.
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+async function loadDevices() {
+    const deviceList = document.getElementById("deviceList");
+
+    try {
+        const response = await fetch("/devices");
+
+        if (!response.ok) {
+            throw new Error(
+                `Backend returned HTTP ${response.status}`
+            );
+        }
+
+        const devices = await response.json();
+
+        deviceList.innerHTML = "";
+
+        devices.forEach(device => {
+
+            const deviceCard = document.createElement("div");
+
+            deviceCard.className = "device-card";
+
+            deviceCard.innerHTML = `
+                <div class="device-id">
+                    ${device.device_id}
+                </div>
+
+                <div class="device-type">
+                    ${device.device_type}
+                </div>
+
+                <div class="device-status">
+                    ${device.status}
+                    · ${device.battery}% battery
+                </div>
+            `;
+
+            deviceCard.onclick = () => {
+                investigateDevice(device.device_id);
+            };
+
+            deviceList.appendChild(deviceCard);
+        });
+
+    } catch (error) {
+
+        deviceList.innerHTML = `
+            <div class="error">
+                Unable to load devices.
+            </div>
+        `;
+
+        console.error(error);
+    }
+}
+
+loadDevices();
+
+/*const devices = [
+    {
+        id: "AX-1001",
+        type: "Body Camera",
+        status: "Online",
+        battery: 87,
+        firmware: "5.2.1"
+    },
+    {
+        id: "AX-1002",
+        type: "Body Camera",
+        status: "Offline",
+        battery: 8,
+        firmware: "5.1.9"
+    },
+    {
+        id: "AX-1003",
+        type: "In-Car Camera",
+        status: "Online",
+        battery: 62,
+        firmware: "5.2.1"
+    },
+    {
+        id: "AX-1004",
+        type: "Body Camera",
+        status: "Offline",
+        battery: 76,
+        firmware: "5.0.4"
+    },
+    {
+        id: "AX-1005",
+        type: "Sensor",
+        status: "Online",
+        battery: 94,
+        firmware: "3.4.0"
+    }
+];
+*/
+
+let devices =[];
+let selectedDevice = null;
+let investigationCount = 0;
+
+async function renderDevices() {
+
+    const list = document.getElementById("deviceList");
+
+    try {
+
+        const response = await fetch("/devices");
+
+        if (!response.ok) {
+            throw new Error(
+                `Backend returned HTTP ${response.status}`
+            );
+        }
+
+        devices = await response.json();
+
+        // Put devices needing investigation first.
+        devices.sort((a, b) => {
+            if (a.status === "Offline" && b.status !== "Offline") return -1;
+            if (a.status !== "Offline" && b.status === "Offline") return 1;
+            return 0;
+        });
+
+        list.innerHTML = "";
+
+        devices.forEach(device => {
+
+            const deviceElement = document.createElement("div");
+
+            deviceElement.className = "device";
+
+            const isOffline = device.status === "Offline";
+
+            deviceElement.innerHTML = `
+                <div class="device-top">
+
+                    <div>
+                        <div class="device-id">
+                            ${device.device_id}
+                        </div>
+
+                        <div class="device-type">
+                            ${device.device_type}
+                        </div>
+                    </div>
+
+                    <div class="status ${isOffline ? "offline" : "online"}">
+                        ${device.status}
+                    </div>
+
+                </div>
+
+                <div style="margin-top: 8px; font-size: 13px;">
+                    ${device.battery}% battery
+                </div>
+
+                ${
+                    isOffline
+                        ? `
+                            <div style="
+                                margin-top: 8px;
+                                font-size: 12px;
+                                font-weight: 600;
+                                color: #b42318;
+                            ">
+                                ⚠ Needs investigation
+                            </div>
+                          `
+                        : `
+                            <div style="
+                                margin-top: 8px;
+                                font-size: 12px;
+                                color: #667085;
+                            ">
+                                Investigate available
+                            </div>
+                          `
+                }
+            `;
+
+            deviceElement.addEventListener(
+                "click",
+                () => selectDevice(device.device_id)
+            );
+
+            list.appendChild(deviceElement);
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load devices:",
+            error
+        );
+
+        list.innerHTML = `
+            <div class="empty">
+                Unable to load devices.
+            </div>
+        `;
+    }
+}
+
+function selectDevice(deviceId) {
+
+    selectedDevice = deviceId;
+    const details = document.getElementById("details");
+
+    details.classList.remove("empty");
+
+    const device = devices.find(d => d.device_id === deviceId);
+
+
+    details.innerHTML = `
+
+        <div class="details">
+
+            <div class="detail-title">
+                ${device.device_id}
+            </div>
+
+            <div class="detail-subtitle">
+                ${device.device_type}
+            </div>
+
+            <div class="device-facts">
+
+                <div class="fact">
+                    <div class="fact-label">Status</div>
+                    <div class="fact-value">${device.status}</div>
+                </div>
+
+                <div class="fact">
+                    <div class="fact-label">Battery</div>
+                    <div class="fact-value">${device.battery}%</div>
+                </div>
+
+                <div class="fact">
+                    <div class="fact-label">Firmware</div>
+                    <div class="fact-value">${device.firmware}</div>
+                </div>
+
+            </div>
+
+            <button
+                class="primary"
+                onclick="investigateDevice('${device.device_id}')">
+                Investigate with Agent
+            </button>
+
+            <div id="agentResult"></div>
+
+            <div class="human-state">
+
+                <div class="human-state-title">
+                    Maya's Decision
+                </div>
+
+                <div class="state-buttons">
+
+                    <button
+                        class="secondary"
+                        disabled>
+                        Investigated by Maya
+                    </button>
+
+                    <button
+                        class="secondary"
+                        disabled>
+                        Resolved
+                    </button>
+
+                    <button
+                        class="secondary"
+                        disabled>
+                        Verified
+                    </button>
+
+                </div>
+
+                <div class="decision-note">
+                     Human decision workflow not enabled in prototype.
+                </div>
+
+                <div id="humanState"
+                     style="margin-top:12px;color:#667085;">
+                    Awaiting human action
+                </div>
+
+            </div>
+
+        </div>
+    `;
+
+    renderDevices();
+}
+
+async function investigateDevice(deviceId) {
+
+    const resultContainer =
+        document.getElementById("agentResult");
+
+    resultContainer.innerHTML = `
+        <div class="agent-panel">
+            <div class="agent-header">
+                <span>FleetResolve Agent</span>
+                <span>Investigating...</span>
+            </div>
+
+            <div class="agent-body">
+                Gathering device evidence...
+            </div>
+        </div>
+    `;
+
+    try {
+
+        /*
+         * DEMO MODE
+         *
+         * The live API has already been validated in Colab.
+         * Demo mode lets the LinkedIn prototype run without
+         * requiring a public tunnel to the Colab backend.
+         */
+
+        /*const demoResult = {
+
+            device_id: "AX-1002",
+
+            answer: `
+RECOMMENDATION:
+Initiate an immediate service review of device AX-1002.
+As part of the review, verify the device's battery health
+and replacement history and confirm its connectivity status.
+
+EVIDENCE:
+- Device status: Offline.
+- Battery level: 8% (below 10%).
+- Previous Battery Failure: INC-201.
+- Previous Connectivity Loss: INC-245.
+
+POLICY BASIS:
+- Offline AND battery below 10% → immediate service review.
+- Previous battery failure → check battery health and replacement history.
+- Previous connectivity loss → verify connectivity.
+
+NOT AUTHORIZED:
+- Battery replacement.
+- Device deactivation.
+- Firmware changes or updates.
+- Return-to-service approval.
+- Other consequential operational actions requiring human approval.
+            `,
+
+            validation: {
+                status: "VALID",
+                reason:
+                    "Recommendation is within the defined evidence and policy boundary.",
+                unsupported_items: []
+            },
+
+            tool_trace: [
+                { tool: "get_device" },
+                { tool: "get_incident_history" }
+            ]
+        };
+        */
+
+
+
+         const response = await fetch(
+            `/devices/${deviceId}/investigate`,
+            { method: "POST" }
+          );
+         if (!response.ok) {
+            throw new Error(
+        `   Backend returned HTTP ${response.status}`
+          );
+          }
+          const result = await response.json();
+
+
+        investigationCount++;
+
+        document.getElementById(
+            "investigationCount"
+        ).textContent = investigationCount;
+
+        const validation = result.validation;
+
+        const validationClass =
+            validation.status === "VALID"
+                ? "valid"
+                : "review";
+
+        const validationLabel =
+            validation.status === "VALID"
+                ? "✓ Recommendation validated"
+                : "⚠ Human review required";
+
+        resultContainer.innerHTML = `
+
+            <div class="agent-panel">
+
+                <div class="agent-header">
+                    <span>FleetResolve Agent</span>
+                    <span>${validationLabel}</span>
+                </div>
+
+                <div class="validation ${validationClass}">
+                    <strong>${validation.status}</strong><br>
+                    ${validation.reason}
+                </div>
+
+                <div class="agent-body">
+                    ${renderAgentAnswer(result.answer)}
+                </div>
+
+                <div class="trace">
+                    <strong>Agent tool trace</strong><br><br>
+                    ${result.tool_trace
+                        .map(item => `• ${item.tool}`)
+                        .join("<br>")}
+                </div>
+
+            </div>
+        `;
+
+    } catch (error) {
+
+        resultContainer.innerHTML = `
+            <div class="agent-panel">
+                <div class="agent-header">
+                    FleetResolve Agent
+                </div>
+
+                <div class="agent-body">
+                    Unable to run the investigation.
+                </div>
+            </div>
+        `;
+    }
+}
+
+function setHumanState(state) {
+
+    document.getElementById("humanState").innerHTML =
+        `<strong>${state}</strong>`;
+}
+
+
+
+function renderAgentAnswer(answer) {
+
+    return answer
+        .replace(/\*\*/g, "")
+        .split("\n")
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => {
+
+            const sectionTitles = [
+                "RECOMMENDATION:",
+                "EVIDENCE:",
+                "POLICY BASIS:",
+                "NOT AUTHORIZED:"
+            ];
+
+            if (sectionTitles.includes(line)) {
+                return `
+                    <div class="agent-section-title">
+                        ${escapeHtml(line.replace(":", ""))}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="agent-line">
+                    ${escapeHtml(line.replace(/^[-•]\s*/, ""))}
+                </div>
+            `;
+
+        })
+        .join("");
+}
+
+
+function escapeHtml(text) {
+
+    const div = document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+}
+
+renderDevices();
+
+</script>
+
+</body>
+</html>
