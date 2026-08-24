@@ -1,1 +1,279 @@
 
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FleetResolve — Operator Flow Demo</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#f4f6f9;color:#172033;height:100vh;overflow:hidden}
+button{font:inherit}
+.header{height:68px;background:#172338;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+.brand{font-size:21px;font-weight:800}.tagline{font-size:11px;color:#aeb9c9;margin-top:2px}
+.header-right{display:flex;align-items:center;gap:14px;font-size:12px}.operator-pill{padding:7px 10px;border:1px solid #39465a;border-radius:999px}
+.app{height:calc(100vh - 68px);display:flex;flex-direction:column}
+.nav{height:54px;background:#fff;border-bottom:1px solid #dfe4eb;display:flex;align-items:center;padding:0 28px;gap:6px}
+.nav button{border:0;background:transparent;color:#667085;padding:9px 13px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700}
+.nav button.active{background:#eef3f9;color:#172338}.nav-spacer{flex:1}
+.reset{border:1px solid #d9dfe7!important;background:#fff!important;color:#667085!important}
+.screen{display:none;flex:1;min-height:0;padding:20px 28px}.screen.active{display:flex;flex-direction:column;gap:15px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}.metric{background:#fff;border:1px solid #dfe4eb;border-radius:9px;padding:13px 16px}
+.metric-label{font-size:11px;color:#667085}.metric-value{font-size:25px;font-weight:800;margin-top:4px}.metric-sub{font-size:10px;color:#8a94a4;margin-top:2px}
+.flow{display:grid;grid-template-columns:1fr 1.7fr;gap:15px;flex:1;min-height:0}
+.panel{background:#fff;border:1px solid #dfe4eb;border-radius:9px;overflow:hidden;min-height:0}
+.panel-title{padding:14px 17px;border-bottom:1px solid #e8ecf1;font-size:13px;font-weight:800}
+.pagination{padding:9px 13px;border-bottom:1px solid #edf0f4;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#667085}
+.page-btn{border:1px solid #dfe4eb;background:#fff;border-radius:5px;padding:4px 7px;font-size:10px;cursor:pointer}.page-btn:disabled{opacity:.4;cursor:not-allowed}
+.device-list{overflow:auto;height:calc(100% - 84px)}
+.device{padding:14px 17px;border-bottom:1px solid #edf0f4;cursor:pointer}.device:hover{background:#f9fafc}.device.selected{background:#f5f8fc;border-left:3px solid #344b68;padding-left:14px}
+.row{display:flex;justify-content:space-between;gap:10px}.device-id{font-size:14px;font-weight:800}.device-type{font-size:11px;color:#667085;margin-top:2px}
+.state{font-size:10px;font-weight:800;padding:4px 7px;border-radius:999px}.normal{background:#edf8f2;color:#087443}.needs{background:#fff1f0;color:#c62828}.resolved{background:#edf8f2;color:#087443}.review{background:#fff7e6;color:#9a6700}.investigating{background:#eef3fa;color:#31506f}
+.device-meta{font-size:10px;color:#667085;margin-top:7px}.device-status-line{font-size:10px;font-weight:700;margin-top:5px}
+.detail{height:100%;overflow:auto;padding:19px}.eyebrow{font-size:10px;color:#667085;text-transform:uppercase;letter-spacing:.07em;font-weight:800}
+.title{font-size:22px;font-weight:800;margin-top:3px}.subtitle{font-size:12px;color:#667085;margin-top:3px}
+.fact-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}.fact{background:#f7f9fb;border:1px solid #e9edf2;border-radius:7px;padding:10px}.fact-label{font-size:9px;color:#667085;text-transform:uppercase}.fact-value{font-size:13px;font-weight:800;margin-top:4px}
+.assignment{border:1px solid #dfe4eb;border-radius:8px;padding:13px;background:#fbfcfd}.assignment-top{display:flex;justify-content:space-between;align-items:center}.assignment-name{font-weight:800;font-size:13px}.assignment-role{font-size:11px;color:#667085;margin-top:2px}.match{font-size:10px;font-weight:800;background:#edf3fa;color:#31506f;padding:5px 8px;border-radius:999px}
+.assignment-reason{font-size:12px;line-height:1.45;margin-top:10px;color:#364152}
+.audit{margin-top:15px}.audit h3{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#667085;margin:0 0 7px}.audit-line{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #edf0f4;font-size:11px}.audit-time{width:105px;color:#8a94a4;flex:none}.audit-event{font-weight:700}.audit-detail{color:#667085;font-weight:400}
+.notice{margin-top:12px;padding:9px 11px;background:#f7f9fb;border:1px solid #e8ecf1;border-radius:6px;color:#667085;font-size:10px}
+.empty-state{height:100%;display:flex;align-items:center;justify-content:center;color:#8a94a4;font-size:13px}
+
+/* Gmail-like Maya queue */
+.inbox-layout{display:grid;grid-template-columns:190px 350px 1fr;flex:1;min-height:0;background:#fff;border:1px solid #dfe4eb;border-radius:9px;overflow:hidden}
+.mail-sidebar{border-right:1px solid #e1e6ed;background:#fbfcfe;padding:14px 10px}.mail-title{font-size:16px;font-weight:800;padding:0 9px 12px}.mail-nav{display:grid;gap:3px}.mail-nav div{padding:9px;border-radius:6px;font-size:12px;color:#4b5565;display:flex;justify-content:space-between}.mail-nav div.active{background:#eaf0f7;color:#172338;font-weight:800}.count{font-size:10px;color:#667085}
+.mail-list{overflow:auto;border-right:1px solid #e1e6ed}.mail-list-head{height:49px;border-bottom:1px solid #e8ecf1;padding:15px;font-size:12px;font-weight:800;display:flex;justify-content:space-between}.mail{padding:13px 15px;border-bottom:1px solid #edf0f4;cursor:pointer}.mail:hover{background:#fafbfc}.mail.selected{background:#f5f8fc;border-left:3px solid #344b68;padding-left:12px}.mail-top{display:flex;justify-content:space-between}.mail-from{font-size:12px;font-weight:800}.mail-time{font-size:10px;color:#8a94a4}.mail-subject{font-size:12px;font-weight:700;margin-top:4px}.mail-preview{font-size:10px;color:#667085;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{width:7px;height:7px;border-radius:50%;background:#b54708;display:inline-block;margin-right:5px}
+.mail-detail{overflow:auto;padding:20px 23px}.mail-detail-head{border-bottom:1px solid #e7ebf0;padding-bottom:15px}.mail-subject-big{font-size:20px;font-weight:800}.mail-meta{font-size:11px;color:#667085;margin-top:6px}.issue-status{display:inline-block;margin-top:10px;font-size:10px;font-weight:800;padding:5px 8px;border-radius:999px;background:#f1f4f7;color:#536173}
+.summary{margin-top:16px;background:#f7f9fb;border:1px solid #e6eaf0;border-radius:8px;padding:13px}.summary h3,.audit-box h3{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#667085;margin:0 0 7px}.summary p{font-size:13px;line-height:1.5;margin:0;color:#273447}
+.section-title{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#667085;font-weight:800;margin:17px 0 7px}.evidence-list{display:grid;gap:6px}.evidence-row{font-size:11px;padding:8px 10px;background:#fafbfc;border:1px solid #edf0f4;border-radius:6px}
+.actions{display:flex;gap:8px;margin-top:18px}.action{border:0;border-radius:7px;padding:9px 13px;font-size:11px;font-weight:800;cursor:pointer}.investigate-btn{background:#243b59;color:#fff}.close-btn{background:#f1f3f6;color:#344054}.action:disabled{opacity:.45;cursor:not-allowed}
+.audit-box{margin-top:17px;border-top:1px solid #e7ebf0;padding-top:14px}
+.resolution-banner{margin-top:15px;padding:11px 13px;border-radius:7px;background:#edf8f2;color:#087443;font-size:11px;font-weight:700}
+.toast{position:fixed;right:24px;bottom:22px;background:#172338;color:#fff;padding:10px 13px;border-radius:7px;font-size:11px;opacity:0;transform:translateY(5px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:1050px){.inbox-layout{grid-template-columns:160px 300px 1fr}.flow{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div><div class="brand">FleetResolve</div><div class="tagline">Agentic operations for connected fleets</div></div>
+  <div class="header-right"><span class="operator-pill">Maya · Operator</span></div>
+</header>
+
+<div class="app">
+  <div class="nav">
+    <button id="nav-fleet" class="active" onclick="showScreen('fleet')">Fleet Overview</button>
+    <button id="nav-inbox" onclick="showScreen('inbox')">Maya's Queue</button>
+    <div class="nav-spacer"></div>
+    <button class="reset" onclick="resetDemo()">↻ Reset Demo</button>
+  </div>
+
+  <section id="fleet" class="screen active">
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">FLEET DEVICES</div><div class="metric-value">2M</div><div class="metric-sub">Representative fleet scale</div></div>
+      <div class="metric"><div class="metric-label">ONLINE</div><div class="metric-value">1.96M</div><div class="metric-sub">Current fleet state</div></div>
+      <div class="metric"><div class="metric-label">NEEDS INVESTIGATION</div><div class="metric-value" id="needsCount">5</div><div class="metric-sub">Awaiting human review</div></div>
+      <div class="metric"><div class="metric-label">AGENT RESOLVED</div><div class="metric-value">—</div><div class="metric-sub">Shown when authorized resolution is available</div></div>
+    </div>
+    <div class="flow">
+      <div class="panel">
+        <div class="panel-title">Fleet Devices</div>
+        <div class="pagination"><span id="pageLabel">1–5 of 5 sample devices</span><span><button class="page-btn" id="prevBtn" onclick="prevPage()">‹</button> <button class="page-btn" id="nextBtn" onclick="nextPage()">›</button></span></div>
+        <div id="deviceList" class="device-list"></div>
+      </div>
+      <div class="panel"><div id="fleetDetail" class="empty-state">Select a device</div></div>
+    </div>
+  </section>
+
+  <section id="inbox" class="screen">
+    <div class="inbox-layout">
+      <aside class="mail-sidebar">
+        <div class="mail-title">Maya's Queue</div>
+        <div class="mail-nav">
+          <div class="active">Needs Investigation <span class="count" id="queueCount">2</span></div>
+          <div>Investigating <span class="count" id="investigatingCount">0</span></div>
+          <div>Closed <span class="count" id="closedCount">0</span></div>
+        </div>
+        <div style="margin-top:22px;padding:9px;font-size:10px;color:#8a94a4;line-height:1.5">
+          Issues are routed to Maya when the required expertise and authorization match her role.
+        </div>
+      </aside>
+      <div class="mail-list">
+        <div class="mail-list-head"><span>Issues for Maya</span><span id="mailPageLabel">1–3</span></div>
+        <div id="mailList"></div>
+        <div class="pagination"><span></span><span><button class="page-btn" id="mailPrev" onclick="prevMailPage()">‹</button> <button class="page-btn" id="mailNext" onclick="nextMailPage()">›</button></span></div>
+      </div>
+      <div id="mailDetail" class="mail-detail"><div class="empty-state">Select an issue</div></div>
+    </div>
+  </section>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+/*
+  Mirror / smoke-test mode.
+  The representative device, user and incident records below are aligned
+  to the FleetResolve notebook scenario. No backend or endpoint is called.
+*/
+const devices=[
+{id:"AX-1001",type:"Body Camera",status:"Online",battery:87,firmware:"5.2.1",user:"USR-001",lastSeen:"2026-08-16 14:20",state:"Needs investigation"},
+{id:"AX-1002",type:"Body Camera",status:"Offline",battery:8,firmware:"5.1.9",user:"USR-002",lastSeen:"2026-08-16 10:12",state:"Needs investigation"},
+{id:"AX-1003",type:"In-Car Camera",status:"Online",battery:62,firmware:"5.2.1",user:"USR-003",lastSeen:"2026-08-16 14:25",state:"Needs investigation"},
+{id:"AX-1004",type:"Body Camera",status:"Offline",battery:76,firmware:"5.0.4",user:"USR-004",lastSeen:"2026-08-16 09:45",state:"Needs investigation"},
+{id:"AX-1005",type:"Sensor",status:"Online",battery:94,firmware:"3.4.0",user:"USR-005",lastSeen:"2026-08-16 14:28",state:"Needs investigation"}
+];
+
+const users={
+"USR-001":{id:"USR-001",name:"USR-001",role:"Patrol operator"},
+"USR-002":{id:"USR-002",name:"USR-002",role:"Patrol operator"},
+"USR-003":{id:"USR-003",name:"USR-003",role:"Traffic operator"},
+"USR-004":{id:"USR-004",name:"USR-004",role:"Patrol operator"},
+"USR-005":{id:"USR-005",name:"USR-005",role:"Operations operator"}
+};
+
+const incidents={
+"AX-1001":[],
+"AX-1002":[
+{id:"INC-201",type:"Battery Failure",date:"2026-07-20",resolution:"Battery replaced"},
+{id:"INC-245",type:"Connectivity Loss",date:"2026-08-02",resolution:"Device restarted"}],
+"AX-1003":[],
+"AX-1004":[],
+"AX-1005":[]
+};
+
+const baseIssues=[
+{id:"AX-1002",subject:"Device offline with low battery",preview:"Offline at 8% battery; prior battery and connectivity incidents.",time:"10:12",priority:"High",expertise:"Battery & connectivity",assignedTo:"Maya",summary:"AX-1002 is offline at 8% battery. Prior history includes a Battery Failure and a Connectivity Loss. FleetResolve recommends an immediate service review and verification of battery health and connectivity.",evidence:["Device status: Offline","Battery level: 8% (below 10%)","Prior Battery Failure — 2026-07-20","Prior Connectivity Loss — 2026-08-02"],audit:["10:12 · Issue detected","10:13 · Device and incident context consolidated","10:14 · Priority assigned: High","10:15 · Routed to Maya — expertise match"]},
+{id:"AX-1004",subject:"Offline body camera requires review",preview:"Device is offline; review available device context before consequential action.",time:"09:45",priority:"Medium",expertise:"Device reliability",assignedTo:"Maya",summary:"AX-1004 is offline. The current evidence supports investigation, but the prototype does not authorize a consequential operational change.",evidence:["Device status: Offline","Battery level: 76%","Firmware: 5.0.4","No consequential action authorized"],audit:["09:45 · Issue detected","09:46 · Device context consolidated","09:48 · Routed to Maya — expertise match"]},
+{id:"AX-1001",subject:"Routine device review available",preview:"Online body camera; investigation is available when Maya wants additional context.",time:"08:40",priority:"Low",expertise:"Device reliability",assignedTo:"Operations Queue",summary:"AX-1001 is online with 87% battery. No immediate investigation is required by the current evidence. Maya can open the record if she wants additional context.",evidence:["Device status: Online","Battery level: 87%","Firmware: 5.2.1","No prior incidents in the representative record"],audit:["08:40 · Routine review available","08:41 · Routed as optional investigation"]}
+];
+
+let issues=JSON.parse(JSON.stringify(baseIssues));
+let selectedDevice="AX-1002", devicePage=1, selectedIssue="AX-1002", mailPage=1;
+
+function showScreen(name){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(name).classList.add("active");
+document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+document.getElementById("nav-"+name).classList.add("active");
+if(name==="inbox")renderInbox();
+}
+
+function deviceStateClass(d){
+if(d.state==="Agent resolved")return "resolved";
+if(d.state==="Needs investigation")return "needs";
+if(d.state==="Investigating")return "investigating";
+return "normal";
+}
+function renderDevices(){
+const pageSize=5,start=(devicePage-1)*pageSize,items=devices.slice(start,start+pageSize);
+document.getElementById("pageLabel").textContent=`${start+1}–${start+items.length} of ${devices.length} sample devices`;
+document.getElementById("prevBtn").disabled=devicePage===1;
+document.getElementById("nextBtn").disabled=devicePage>=Math.ceil(devices.length/pageSize);
+document.getElementById("deviceList").innerHTML=items.map(d=>`
+<div class="device ${d.id===selectedDevice?"selected":""}" onclick="selectDevice('${d.id}')">
+<div class="row"><div><div class="device-id">${d.id}</div><div class="device-type">${d.type}</div></div><span class="state ${deviceStateClass(d)}">${d.state}</span></div>
+<div class="device-meta">${d.status} · ${d.battery}% battery · ${d.firmware}</div>
+<div class="device-status-line">Assigned to ${users[d.user].name}${(d.id==="AX-1002"||d.id==="AX-1004")?" · Maya queue":""}</div>
+</div>`).join("");
+}
+function prevPage(){if(devicePage>1){devicePage--;renderDevices()}}
+function nextPage(){if(devicePage<Math.ceil(devices.length/5)){devicePage++;renderDevices()}}
+
+function selectDevice(id){
+selectedDevice=id;renderDevices();
+const d=devices.find(x=>x.id===id),u=users[d.user],h=incidents[id];
+document.getElementById("fleetDetail").innerHTML=`
+<div class="detail">
+<div class="eyebrow">Fleet routing decision</div>
+<div class="title">${d.id}</div><div class="subtitle">${d.type} · ${d.status}</div>
+<div class="fact-grid">
+<div class="fact"><div class="fact-label">Status</div><div class="fact-value">${d.status}</div></div>
+<div class="fact"><div class="fact-label">Battery</div><div class="fact-value">${d.battery}%</div></div>
+<div class="fact"><div class="fact-label">Firmware</div><div class="fact-value">${d.firmware}</div></div>
+<div class="fact"><div class="fact-label">State</div><div class="fact-value">${d.state}</div></div>
+</div>
+<div class="assignment"><div class="assignment-top"><div><div class="assignment-name">${u.name}</div><div class="assignment-role">${u.role} operator</div></div><div class="match">Expertise match</div></div>
+<div class="assignment-reason">Work is routed to the operator best positioned to investigate it. The representative record is assigned to <b>${u.name}</b>.</div></div>
+<div class="audit"><h3>High-level audit trail</h3>
+<div class="audit-line"><div class="audit-time">System</div><div><span class="audit-event">Device state evaluated</span><br><span class="audit-detail">Current device context available for investigation.</span></div></div>
+<div class="audit-line"><div class="audit-time">System</div><div><span class="audit-event">${h.length?"Incident history available":"No prior incidents in representative record"}</span><br><span class="audit-detail">${h.length?`${h.length} historical incident(s) available.`:"No additional incident context."}</span></div></div>
+<div class="audit-line"><div class="audit-time">System</div><div><span class="audit-event">Operator matched</span><br><span class="audit-detail">Work surfaced according to expertise and authorization.</span></div></div>
+</div>
+<div class="notice">The UI uses representative records from the FleetResolve notebook so the mirror demo stays aligned with the prototype. Internal tools and model calls are intentionally hidden.</div>
+</div>`;
+}
+
+function renderInbox(){
+const open=issues.filter(i=>i.status!=="Closed" && i.assignedTo==="Maya");
+const pageSize=3,start=(mailPage-1)*pageSize,items=open.slice(start,start+pageSize);
+document.getElementById("queueCount").textContent=open.length;
+document.getElementById("investigatingCount").textContent=issues.filter(i=>i.status==="Investigating" && i.assignedTo==="Maya").length;
+document.getElementById("closedCount").textContent=issues.filter(i=>i.status==="Closed" && i.assignedTo==="Maya").length;
+document.getElementById("mailPageLabel").textContent=open.length?`${start+1}–${Math.min(start+items.length,open.length)}`:"0";
+document.getElementById("mailPrev").disabled=mailPage===1;
+document.getElementById("mailNext").disabled=mailPage>=Math.ceil(open.length/pageSize);
+document.getElementById("mailList").innerHTML=items.map(i=>`
+<div class="mail ${i.id===selectedIssue?"selected":""}" onclick="selectIssue('${i.id}')">
+<div class="mail-top"><div class="mail-from">${i.priority==="High"?'<span class="dot"></span>':''}Issue</div><div class="mail-time">${i.time}</div></div>
+<div class="mail-subject">${i.subject}</div><div class="mail-preview">${i.preview}</div>
+</div>`).join("")||'<div class="empty-state">No open issues</div>';
+if(!items.find(i=>i.id===selectedIssue))selectedIssue=items[0]?.id||null;
+renderMailDetail();
+}
+function prevMailPage(){if(mailPage>1){mailPage--;renderInbox()}}
+function nextMailPage(){const n=issues.filter(i=>i.status!=="Closed").length;if(mailPage<Math.ceil(n/3)){mailPage++;renderInbox()}}
+function selectIssue(id){selectedIssue=id;renderInbox()}
+
+function renderMailDetail(){
+const i=issues.find(x=>x.id===selectedIssue);
+if(!i){document.getElementById("mailDetail").innerHTML='<div class="empty-state">No issue selected</div>';return}
+const status=i.status||"Needs Investigation";
+document.getElementById("mailDetail").innerHTML=`
+<div class="mail-detail-head"><div class="mail-subject-big">${i.subject}</div>
+<div class="mail-meta">${i.id} · routed to Maya because of ${i.expertise}</div>
+<div class="issue-status">${status}</div></div>
+<div class="summary"><h3>What needs Maya's attention</h3><p>${i.summary}</p></div>
+<div class="section-title">Evidence at a glance</div><div class="evidence-list">${i.evidence.map(e=>`<div class="evidence-row">${e}</div>`).join("")}</div>
+<div class="section-title">Recommended next step</div><div class="summary" style="margin-top:0"><p>Review the evidence and operational context. Close the issue when the required human work is complete. No consequential action is performed by this mirror demo.</p></div>
+<div class="actions">
+<button class="action investigate-btn" onclick="setHumanStatus('Investigating')" ${i.status==="Investigating"||i.status==="Closed"?"disabled":""}>Investigate</button>
+<button class="action close-btn" onclick="setHumanStatus('Closed')" ${i.status==="Closed"?"disabled":""}>Close</button>
+</div>
+${i.status==="Closed"?'<div class="resolution-banner">Closed by Maya · Human action recorded</div>':''}
+<div class="audit-box"><h3>Audit trail</h3>${i.audit.map(a=>{const p=a.split(" · ");return `<div class="audit-line"><div class="audit-time">${p[0]}</div><div><span class="audit-event">${p[1]||""}</span>${p[2]?`<br><span class="audit-detail">${p.slice(2).join(" · ")}</span>`:""}</div></div>`}).join("")}${i.status?`<div class="audit-line"><div class="audit-time">Now</div><div><span class="audit-event">Maya → ${i.status}</span><br><span class="audit-detail">Human state change recorded in the demo.</span></div></div>`:""}</div>`;
+}
+function syncFleetFromIssues(){
+  const issueByDevice = {};
+  issues.forEach(i => { issueByDevice[i.id] = i; });
+
+  devices.forEach(d => {
+    const issue = issueByDevice[d.id];
+    if (!issue) return;
+    if (issue.status === "Closed") d.state = "Agent resolved";
+    else if (issue.status === "Investigating") d.state = "Investigating";
+    else d.state = "Needs investigation";
+  });
+
+  const needs = devices.filter(d => d.state === "Needs investigation").length;
+  document.getElementById("needsCount").textContent = needs;
+  renderDevices();
+}
+
+function setHumanStatus(status){
+const i=issues.find(x=>x.id===selectedIssue);if(!i)return;
+i.status=status;
+syncFleetFromIssues();
+showToast(status==="Investigating"?"Maya is investigating the issue.":"Issue closed by Maya.");
+renderInbox();
+}
+function resetDemo(){
+issues=JSON.parse(JSON.stringify(baseIssues));
+selectedDevice="AX-1002";devicePage=1;selectedIssue="AX-1002";mailPage=1;
+syncFleetFromIssues();selectDevice(selectedDevice);renderInbox();showScreen("fleet");showToast("Demo reset.");
+}
+function showToast(text){const t=document.getElementById("toast");t.textContent=text;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)}
+
+renderDevices();selectDevice(selectedDevice);renderInbox();
+</script>
+</body>
+</html>
